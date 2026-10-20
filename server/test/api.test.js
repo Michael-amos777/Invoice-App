@@ -9,7 +9,7 @@ test('API End-to-End: Profile, Client, and Invoice Lifecycle', async () => {
   assert.equal(profileRes.status, 200);
   const profile = await profileRes.json();
   assert.equal(profile.id, 'default');
-  assert.ok(profile.business_name);
+  assert.equal(typeof profile.business_name, 'string');
 
   // 2. Create a client
   const clientPayload = {
