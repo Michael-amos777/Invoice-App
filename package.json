@@ -4,8 +4,11 @@
   "description": "Professional Customizable Invoice Generator with Native PDF Export",
   "scripts": {
     "start": "node server/src/index.js",
+    "dev": "node server/src/index.js",
+    "dev:client": "cd client && npm run dev",
     "test": "node --test server/test/**/*.test.js",
-    "build": "cd client && npm run build"
+    "build": "cd client && npm run build",
+    "reset": "node -e \"import('./server/src/db.js').then(m => m.resetDatabase('all'))\""
   },
   "keywords": ["invoice", "pdf", "generator", "freelance", "business"],
   "author": "Antigravity",
