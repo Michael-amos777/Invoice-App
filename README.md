@@ -117,3 +117,55 @@ invoice-app/
 │   └── seed-samples.js              # Script to seed reference invoices
 └── README.md
 ```
+
+---
+
+## 🔄 Workspace Reset & Demo Data Management
+
+Invoicr Pro provides instant controls to reset or populate your data:
+
+1. **In-App Reset (UI)**:
+   - Navigate to **Business Profile & Settings** → **Data & Reset** tab.
+   - **Reset Workspace to Blank**: Clears all sample figures, dummy names (Acme Creative Studio, Alex Morgan), invoices, and clients for a 100% clean slate.
+   - **Clear Invoices Only**: Removes invoices and client records while keeping your business profile intact.
+   - **Reload Demo Data**: Restores sample Fauget and Flux Studio invoices at any time for testing.
+
+2. **Invoice Editor Form Reset**:
+   - Inside the Invoice Editor, click **Reset Form** in the top action bar to wipe all line items and form fields immediately.
+
+3. **CLI Reset**:
+   ```powershell
+   npm run reset
+   ```
+
+---
+
+## 📱 Installing Invoicr Pro as an App (PWA)
+
+Invoicr Pro is built as an installable **Progressive Web App (PWA)** that runs natively without browser toolbars:
+
+- **Desktop (Chrome / Edge)**:
+  - Click the **Install App** button in the top navigation bar, or click the install icon in your browser's address bar.
+- **iPhone / iPad (iOS Safari)**:
+  - Open `http://<your-ip>:5000` or hosted URL in Safari.
+  - Tap the **Share** button (`⎋`), scroll down, and select **Add to Home Screen**.
+- **Android (Chrome)**:
+  - Tap **Install App** in the header or select **Install App / Add to Home screen** from the 3-dot menu.
+
+---
+
+## 🐙 Pushing to GitHub
+
+The repository is already initialized and committed locally with Git. To push it to your GitHub account:
+
+1. **Create an empty repository** on [GitHub.com](https://github.com/new) (e.g. named `invoice-app`). Do not initialize with a README or license.
+
+2. **Link the remote and push**:
+   ```powershell
+   # Add your GitHub repository as origin
+   git remote add origin https://github.com/<YOUR-GITHUB-USERNAME>/invoice-app.git
+
+   # Push to main branch
+   git push -u origin main
+   ```
+
