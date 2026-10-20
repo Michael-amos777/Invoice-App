@@ -1,0 +1,13 @@
+{
+  "name": "invoicr-pro",
+  "version": "1.0.0",
+  "description": "Professional Customizable Invoice Generator with Native PDF Export",
+  "scripts": {
+    "start": "node server/src/index.js",
+    "test": "node --test server/test/**/*.test.js",
+    "build": "cd client && npm run build"
+  },
+  "keywords": ["invoice", "pdf", "generator", "freelance", "business"],
+  "author": "Antigravity",
+  "license": "MIT"
+}
