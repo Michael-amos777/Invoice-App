@@ -25,7 +25,8 @@ import {
   FileCheck2,
   Sliders,
   Layers,
-  RotateCcw
+  RotateCcw,
+  X
 } from 'lucide-react';
 
 interface InvoiceEditorProps {
@@ -47,6 +48,18 @@ export const InvoiceEditor: React.FC<InvoiceEditorProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [showPreviewModal, setShowPreviewModal] = useState<boolean>(false);
   const [pageSize, setPageSize] = useState<'A4' | 'Letter'>('A4');
+
+  // Close full preview on Escape key press
+  useEffect(() => {
+    if (!showPreviewModal) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setShowPreviewModal(false);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [showPreviewModal]);
 
   // Client Selection State
   const [selectedClientId, setSelectedClientId] = useState<string>('');
@@ -1036,10 +1049,26 @@ export const InvoiceEditor: React.FC<InvoiceEditorProps> = ({
 
       {/* Full Preview Modal */}
       {showPreviewModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-md p-4 overflow-y-auto">
-          <div className="max-w-4xl w-full my-8 bg-transparent">
-            {/* Modal Toolbar */}
-            <div className="bg-slate-900 text-white px-6 py-3.5 rounded-t-2xl flex justify-between items-center flex-wrap gap-3">
+        <div 
+          className="fixed inset-0 z-50 overflow-y-auto bg-slate-950/85 backdrop-blur-md p-3 sm:p-6"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setShowPreviewModal(false);
+          }}
+        >
+          {/* Floating Fixed Close Button */}
+          <button
+            type="button"
+            onClick={() => setShowPreviewModal(false)}
+            className="fixed top-4 right-4 z-[60] p-3 bg-slate-900/90 hover:bg-slate-800 text-white rounded-full shadow-2xl backdrop-blur-md border border-slate-700/80 transition-all hover:scale-105 active:scale-95 cursor-pointer flex items-center justify-center group"
+            title="Close preview (Esc)"
+            aria-label="Close preview"
+          >
+            <X className="w-5 h-5 text-slate-300 group-hover:text-white" />
+          </button>
+
+          <div className="max-w-4xl mx-auto my-2 sm:my-6 relative shadow-2xl">
+            {/* Modal Toolbar (Sticky) */}
+            <div className="sticky top-0 z-30 bg-slate-900 text-white px-5 sm:px-6 py-3.5 rounded-t-2xl flex justify-between items-center flex-wrap gap-3 shadow-md border-b border-slate-800">
               <div className="flex items-center gap-3">
                 <span className="font-bold text-sm tracking-wide">Live Document Preview</span>
                 <span className="text-xs bg-slate-800 px-2 py-0.5 rounded text-teal-300 font-mono">
@@ -1051,12 +1080,14 @@ export const InvoiceEditor: React.FC<InvoiceEditorProps> = ({
                 {/* Page Size toggle */}
                 <div className="bg-slate-800 p-0.5 rounded-lg text-xs font-semibold flex">
                   <button
+                    type="button"
                     onClick={() => setPageSize('A4')}
                     className={`px-2.5 py-1 rounded ${pageSize === 'A4' ? 'bg-teal-700 text-white' : 'text-slate-400'}`}
                   >
                     A4
                   </button>
                   <button
+                    type="button"
                     onClick={() => setPageSize('Letter')}
                     className={`px-2.5 py-1 rounded ${pageSize === 'Letter' ? 'bg-teal-700 text-white' : 'text-slate-400'}`}
                   >
@@ -1065,6 +1096,7 @@ export const InvoiceEditor: React.FC<InvoiceEditorProps> = ({
                 </div>
 
                 <button
+                  type="button"
                   onClick={() => window.print()}
                   className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-white text-xs font-semibold rounded-lg flex items-center gap-1.5 transition"
                 >
@@ -1073,16 +1105,18 @@ export const InvoiceEditor: React.FC<InvoiceEditorProps> = ({
                 </button>
 
                 <button
+                  type="button"
                   onClick={() => setShowPreviewModal(false)}
-                  className="px-3 py-1.5 bg-teal-600 hover:bg-teal-700 text-white text-xs font-semibold rounded-lg transition"
+                  className="px-3.5 py-1.5 bg-teal-600 hover:bg-teal-700 text-white text-xs font-bold rounded-lg transition flex items-center gap-1.5 shadow-xs cursor-pointer"
                 >
-                  Close Preview
+                  <X className="w-4 h-4" />
+                  <span>Close Preview</span>
                 </button>
               </div>
             </div>
 
             {/* Document sheet */}
-            <div className="bg-slate-100 p-6 sm:p-10 rounded-b-2xl overflow-x-auto flex justify-center">
+            <div className="bg-slate-200/90 p-4 sm:p-10 overflow-x-auto flex justify-center">
               <div className="shadow-2xl">
                 <InvoiceDocument
                   invoice={previewInvoice}
@@ -1091,6 +1125,20 @@ export const InvoiceEditor: React.FC<InvoiceEditorProps> = ({
                   pageSize={pageSize}
                 />
               </div>
+            </div>
+
+            {/* Modal Footer with Dismiss Action */}
+            <div className="bg-slate-900 text-slate-300 px-6 py-3 rounded-b-2xl flex justify-between items-center text-xs border-t border-slate-800">
+              <span className="text-slate-400">
+                Press <kbd className="px-1.5 py-0.5 bg-slate-800 text-slate-200 rounded font-mono text-[11px] border border-slate-700">Esc</kbd> or click outside to exit
+              </span>
+              <button
+                type="button"
+                onClick={() => setShowPreviewModal(false)}
+                className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-white font-medium rounded-lg transition text-xs cursor-pointer"
+              >
+                Done Previewing
+              </button>
             </div>
           </div>
         </div>

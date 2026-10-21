@@ -103,6 +103,7 @@ app.put('/api/profile', async (req, res) => {
         invoice_prefix = ?,
         next_invoice_number = ?,
         selected_template = ?,
+        show_name_with_logo = ?,
         updated_at = datetime('now')
       WHERE id = 'default'
     `, [
@@ -132,7 +133,8 @@ app.put('/api/profile', async (req, res) => {
       p.other_payment_methods || '',
       p.invoice_prefix || 'INV-',
       Number(p.next_invoice_number) || 1001,
-      p.selected_template || 'fauget'
+      p.selected_template || 'fauget',
+      p.show_name_with_logo !== undefined ? (p.show_name_with_logo ? 1 : 0) : 1
     ]);
 
     const updated = await query.get(`SELECT * FROM business_profiles WHERE id = 'default'`);

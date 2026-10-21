@@ -72,17 +72,19 @@ export const InvoiceDocument: React.FC<InvoiceDocumentProps> = ({
                 <img 
                   src={biz.logo_url} 
                   alt={biz.business_name || 'Logo'} 
-                  className="max-h-16 max-w-[120px] object-contain rounded"
+                  className="max-h-16 max-w-[130px] object-contain rounded"
                 />
               )}
-              <div>
-                <div className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight leading-none">
-                  {biz.business_name || 'Flux Studio'}
+              {(!biz.logo_url || ((biz as any).show_name_with_logo !== false && (biz as any).show_name_with_logo !== 0)) && (
+                <div>
+                  <div className={`${biz.logo_url ? 'text-base sm:text-lg font-bold text-zinc-100' : 'text-2xl sm:text-3xl font-extrabold text-white'} tracking-tight leading-none`}>
+                    {biz.business_name || 'Flux Studio'}
+                  </div>
+                  {biz.owner_name && (
+                    <div className="text-xs text-zinc-400 mt-1">{biz.owner_name}</div>
+                  )}
                 </div>
-                {biz.owner_name && (
-                  <div className="text-xs text-zinc-400 mt-1">{biz.owner_name}</div>
-                )}
-              </div>
+              )}
             </div>
           </div>
 
@@ -208,24 +210,28 @@ export const InvoiceDocument: React.FC<InvoiceDocumentProps> = ({
               <img 
                 src={biz.logo_url} 
                 alt={biz.business_name || 'Logo'} 
-                className="max-h-16 max-w-[120px] object-contain rounded-lg shadow-sm"
+                className="max-h-16 max-w-[140px] object-contain rounded-lg shadow-xs"
               />
             ) : (
               <div 
-                className="w-14 h-14 rounded-2xl flex items-center justify-center text-white font-extrabold text-2xl shadow-md"
+                className="w-12 h-12 rounded-xl flex items-center justify-center text-white font-extrabold text-xl shadow-md"
                 style={{ background: `linear-gradient(135deg, ${primaryColor}, ${secondaryColor})` }}
               >
                 {(biz.business_name || 'I').substring(0, 2).toUpperCase()}
               </div>
             )}
-            <div>
-              <div className="text-2xl font-black uppercase tracking-wider text-[#0c1a1e] leading-none">
-                {biz.business_name || 'FAUGET'}
+            {(!biz.logo_url || ((biz as any).show_name_with_logo !== false && (biz as any).show_name_with_logo !== 0)) && (
+              <div>
+                <div className={`${biz.logo_url ? 'text-sm sm:text-base font-bold text-[#1a2c31]' : 'text-xl font-black uppercase tracking-wider text-[#0c1a1e]'} leading-tight`}>
+                  {biz.business_name || 'FAUGET'}
+                </div>
+                {biz.owner_name && (
+                  <div className="text-xs font-medium text-[#556970] mt-0.5">
+                    {biz.owner_name}
+                  </div>
+                )}
               </div>
-              <div className="text-sm font-medium text-[#556970] mt-1">
-                {biz.owner_name || 'Adventures Ski Service'}
-              </div>
-            </div>
+            )}
           </div>
 
           <div className="text-left sm:text-right">

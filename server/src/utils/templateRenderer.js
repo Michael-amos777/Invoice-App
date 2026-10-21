@@ -160,18 +160,24 @@ function renderFaugetTemplate({ invoice, biz, client, items, social, primaryColo
       font-size: 22px;
     }
     .brand-name {
-      font-size: 24px;
+      font-size: 20px;
       font-weight: 800;
       letter-spacing: 0.5px;
       color: #0c1a1e;
       text-transform: uppercase;
       line-height: 1.1;
     }
+    .brand-name-subtle {
+      font-size: 15px;
+      font-weight: 700;
+      color: #1a2c31;
+      line-height: 1.2;
+    }
     .brand-tagline {
-      font-size: 13px;
+      font-size: 12px;
       color: #556970;
       font-weight: 500;
-      margin-top: 3px;
+      margin-top: 2px;
     }
     .invoice-title-section {
       text-align: right;
@@ -365,8 +371,10 @@ function renderFaugetTemplate({ invoice, biz, client, items, social, primaryColo
             : `<div class="brand-logo-fallback">${escapeHtml((biz.business_name || 'I').substring(0, 2).toUpperCase())}</div>`
           }
           <div>
-            <div class="brand-name">${escapeHtml(biz.business_name || 'Your Business')}</div>
-            <div class="brand-tagline">${escapeHtml(biz.owner_name || 'Professional Services')}</div>
+            ${(!biz.logo_url || (biz.show_name_with_logo !== false && biz.show_name_with_logo !== 0))
+              ? `<div class="${biz.logo_url ? 'brand-name-subtle' : 'brand-name'}">${escapeHtml(biz.business_name || 'Your Business')}</div>`
+              : ''}
+            ${biz.owner_name ? `<div class="brand-tagline">${escapeHtml(biz.owner_name)}</div>` : ''}
           </div>
         </div>
 
@@ -624,11 +632,17 @@ function renderStudioTemplate({ invoice, biz, client, items, social, primaryColo
       object-fit: contain;
     }
     .studio-name {
-      font-size: 32px;
+      font-size: 26px;
       font-weight: 800;
       color: #FFFFFF;
       line-height: 1.05;
       letter-spacing: -0.5px;
+    }
+    .studio-name-subtle {
+      font-size: 16px;
+      font-weight: 700;
+      color: #E4E4E7;
+      line-height: 1.2;
     }
     /* Table */
     .table-container {
@@ -734,7 +748,9 @@ function renderStudioTemplate({ invoice, biz, client, items, social, primaryColo
 
         <div class="studio-brand">
           ${biz.logo_url ? `<img src="${biz.logo_url}" alt="Logo" class="studio-brand-logo">` : ''}
-          <div class="studio-name">${escapeHtml(biz.business_name || 'Flux Studio')}</div>
+          ${(!biz.logo_url || (biz.show_name_with_logo !== false && biz.show_name_with_logo !== 0))
+            ? `<div class="${biz.logo_url ? 'studio-name-subtle' : 'studio-name'}">${escapeHtml(biz.business_name || 'Flux Studio')}</div>`
+            : ''}
         </div>
       </div>
 

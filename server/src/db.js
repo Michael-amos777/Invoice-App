@@ -68,9 +68,16 @@ export async function initDb() {
       invoice_prefix TEXT DEFAULT 'INV-',
       next_invoice_number INTEGER DEFAULT 1001,
       selected_template TEXT DEFAULT 'fauget',
+      show_name_with_logo INTEGER DEFAULT 1,
       updated_at TEXT
     );
   `);
+
+  try {
+    await query.run(`ALTER TABLE business_profiles ADD COLUMN show_name_with_logo INTEGER DEFAULT 1`);
+  } catch (err) {
+    // Column already exists
+  }
 
   await query.run(`
     CREATE TABLE IF NOT EXISTS clients (

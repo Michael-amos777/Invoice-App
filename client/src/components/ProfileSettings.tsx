@@ -401,6 +401,26 @@ export const ProfileSettings: React.FC<ProfileSettingsProps> = ({
                   </button>
                 )}
               </div>
+
+              {formData.logo_url && (
+                <div className="pt-3 border-t border-slate-100 flex items-start gap-2.5">
+                  <input
+                    type="checkbox"
+                    id="show_name_with_logo"
+                    checked={formData.show_name_with_logo !== false && formData.show_name_with_logo !== 0}
+                    onChange={(e) => setFormData({ ...formData, show_name_with_logo: e.target.checked ? 1 : 0 })}
+                    className="w-4 h-4 mt-0.5 text-teal-600 rounded border-slate-300 focus:ring-teal-500 cursor-pointer"
+                  />
+                  <div>
+                    <label htmlFor="show_name_with_logo" className="text-xs font-semibold text-slate-800 cursor-pointer">
+                      Show business name text next to logo
+                    </label>
+                    <p className="text-[11px] text-slate-500">
+                      Uncheck this if your uploaded logo already contains your business name.
+                    </p>
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Colors */}

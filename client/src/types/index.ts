@@ -11,6 +11,7 @@ export interface BusinessProfile {
   id: string;
   business_name: string;
   logo_url: string | null;
+  show_name_with_logo?: boolean | number;
   owner_name: string;
   email: string;
   phone: string;
