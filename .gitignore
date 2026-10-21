@@ -34,3 +34,12 @@ desktop.ini
 server/uploads/*
 !server/uploads/.gitkeep
 server/Sample_Invoice_*.pdf
+
+# Local Databases (Contains sensitive client and invoice data)
+*.sqlite
+*.sqlite3
+*.sqlite-journal
+*.db
+server/database.sqlite
+server/database.sqlite*
+
