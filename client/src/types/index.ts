@@ -33,6 +33,7 @@ export interface BusinessProfile {
   bank_routing_number: string;
   bank_swift_bic: string;
   bank_iban: string;
+  bank_address?: string;
   other_payment_methods: string;
   invoice_prefix: string;
   next_invoice_number: number;

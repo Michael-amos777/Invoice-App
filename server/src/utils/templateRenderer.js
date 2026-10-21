@@ -1,4 +1,39 @@
 import { formatCurrency } from './calculations.js';
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const serverRoot = path.resolve(__dirname, '..'); // server directory
+
+function resolveLogoDataUri(logoUrl) {
+  if (!logoUrl) return null;
+  if (logoUrl.startsWith('data:')) return logoUrl;
+
+  let diskPath = null;
+  if (logoUrl.startsWith('/uploads/') || logoUrl.startsWith('uploads/')) {
+    diskPath = path.resolve(serverRoot, logoUrl.replace(/^\//, ''));
+  } else if (path.isAbsolute(logoUrl)) {
+    diskPath = logoUrl;
+  }
+
+  if (diskPath && fs.existsSync(diskPath)) {
+    try {
+      const ext = path.extname(diskPath).toLowerCase();
+      const mime = ext === '.svg' ? 'image/svg+xml' 
+        : ext === '.png' ? 'image/png' 
+        : ext === '.webp' ? 'image/webp' 
+        : 'image/jpeg';
+      const base64 = fs.readFileSync(diskPath).toString('base64');
+      return `data:${mime};base64,${base64}`;
+    } catch (e) {
+      console.error('Error resolving logo for PDF embedding:', e);
+    }
+  }
+
+  return logoUrl;
+}
 
 export function renderInvoiceHtml(invoice, options = {}) {
   const {
@@ -14,6 +49,11 @@ export function renderInvoiceHtml(invoice, options = {}) {
     ? (typeof invoice.client_snapshot === 'string' ? JSON.parse(invoice.client_snapshot) : invoice.client_snapshot)
     : {};
   const items = invoice.items || [];
+
+  // Always embed logo as base64 Data URI so it renders offline & in PDF generation without network dependency
+  if (biz.logo_url) {
+    biz.logo_url = resolveLogoDataUri(biz.logo_url);
+  }
 
   const primaryColor = biz.primary_color || '#0E6973';
   const secondaryColor = biz.secondary_color || '#208B99';
@@ -236,7 +276,7 @@ function renderFaugetTemplate({ invoice, biz, client, items, social, primaryColo
       background: linear-gradient(135deg, ${primaryColor}, ${secondaryColor});
       color: #FFFFFF;
       display: grid;
-      grid-template-columns: 3.5fr 1fr 1.3fr 1.3fr;
+      grid-template-columns: 3.2fr 1fr 1.2fr 1.6fr;
       padding: 13px 22px;
       font-size: 12px;
       font-weight: 800;
@@ -252,7 +292,7 @@ function renderFaugetTemplate({ invoice, biz, client, items, social, primaryColo
     }
     .table-row {
       display: grid;
-      grid-template-columns: 3.5fr 1fr 1.3fr 1.3fr;
+      grid-template-columns: 3.2fr 1fr 1.2fr 1.6fr;
       padding: 13px 22px;
       font-size: 13.5px;
       color: #27373c;
@@ -404,12 +444,13 @@ function renderFaugetTemplate({ invoice, biz, client, items, social, primaryColo
           <div class="section-label">BANK DETAILS</div>
           <div class="party-details">
             ${biz.bank_name ? `<div><strong>${escapeHtml(biz.bank_name)}</strong></div>` : ''}
-            ${biz.bank_account_name ? `<div>Account: ${escapeHtml(biz.bank_account_name)}</div>` : ''}
-            ${biz.bank_account_number ? `<div>${escapeHtml(biz.bank_account_number)}</div>` : ''}
-            ${biz.bank_iban ? `<div>IBAN: ${escapeHtml(biz.bank_iban)}</div>` : ''}
-            ${biz.bank_swift_bic ? `<div>SWIFT/BIC: ${escapeHtml(biz.bank_swift_bic)}</div>` : ''}
-            ${biz.bank_routing_number ? `<div>Routing/Sort: ${escapeHtml(biz.bank_routing_number)}</div>` : ''}
-            ${biz.other_payment_methods ? `<div style="margin-top: 4px; font-size: 11.5px; color: #556970;">${escapeHtml(biz.other_payment_methods)}</div>` : ''}
+            ${biz.bank_account_name ? `<div>${escapeHtml(biz.bank_account_name)}</div>` : ''}
+            ${biz.bank_account_number ? `<div style="font-family: monospace; font-size: 13.5px; color: #1a2c31; font-weight: 500;">${escapeHtml(biz.bank_account_number)}</div>` : ''}
+            ${biz.bank_address ? `<div style="font-size: 12px; color: #556970; white-space: pre-line; margin-top: 2px;">${escapeHtml(biz.bank_address)}</div>` : ''}
+            ${biz.bank_routing_number ? `<div style="font-size: 12px; color: #475a61;">Routing: ${escapeHtml(biz.bank_routing_number)}</div>` : ''}
+            ${biz.bank_swift_bic ? `<div style="font-size: 12px; color: #475a61;">SWIFT: ${escapeHtml(biz.bank_swift_bic)}</div>` : ''}
+            ${biz.bank_iban ? `<div style="font-size: 12px; color: #475a61;">IBAN: ${escapeHtml(biz.bank_iban)}</div>` : ''}
+            ${biz.other_payment_methods ? `<div style="margin-top: 4px; font-size: 11.5px; color: #556970; white-space: pre-line;">${escapeHtml(biz.other_payment_methods)}</div>` : ''}
           </div>
         </div>
       </div>
@@ -418,9 +459,9 @@ function renderFaugetTemplate({ invoice, biz, client, items, social, primaryColo
       <div class="table-container">
         <div class="table-header">
           <div>ITEM DESCRIPTION</div>
-          <div class="col-num">QTY / TIME</div>
-          <div class="col-num">PRICE</div>
-          <div class="col-num">TOTAL</div>
+          <div style="text-align: center;">QTY / TIME</div>
+          <div style="text-align: right; padding-right: 28px;">PRICE</div>
+          <div style="text-align: right;">TOTAL</div>
         </div>
         <div class="table-body">
           ${items.map(item => {
@@ -437,9 +478,9 @@ function renderFaugetTemplate({ invoice, biz, client, items, social, primaryColo
                   <div class="item-desc">${escapeHtml(item.description)}</div>
                   ${item.project ? `<div class="item-subtext">Project: ${escapeHtml(item.project)}</div>` : ''}
                 </div>
-                <div class="col-num">${qtyStr}</div>
-                <div class="col-num">${rateStr}</div>
-                <div class="col-num">${totalStr}</div>
+                <div style="text-align: center;">${qtyStr}</div>
+                <div style="text-align: right; padding-right: 28px;">${rateStr}</div>
+                <div style="text-align: right; font-weight: 700; color: #0c1a1e;">${totalStr}</div>
               </div>
             `;
           }).join('')}
@@ -815,6 +856,7 @@ function renderStudioTemplate({ invoice, biz, client, items, social, primaryColo
           Payable to: ${escapeHtml(biz.bank_account_name || biz.business_name || '')} | 
           Bank: ${escapeHtml(biz.bank_name || '')} | 
           Account: ${escapeHtml(biz.bank_account_number || '')}
+          ${biz.bank_address ? ` | Bank Address: ${escapeHtml(biz.bank_address)}` : ''}
         </div>
       ` : ''}
     </div>

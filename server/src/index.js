@@ -99,6 +99,7 @@ app.put('/api/profile', async (req, res) => {
         bank_routing_number = ?,
         bank_swift_bic = ?,
         bank_iban = ?,
+        bank_address = ?,
         other_payment_methods = ?,
         invoice_prefix = ?,
         next_invoice_number = ?,
@@ -130,6 +131,7 @@ app.put('/api/profile', async (req, res) => {
       p.bank_routing_number || '',
       p.bank_swift_bic || '',
       p.bank_iban || '',
+      p.bank_address || '',
       p.other_payment_methods || '',
       p.invoice_prefix || 'INV-',
       Number(p.next_invoice_number) || 1001,
@@ -451,6 +453,7 @@ app.post('/api/invoices', async (req, res) => {
       bank_routing_number: profile.bank_routing_number,
       bank_swift_bic: profile.bank_swift_bic,
       bank_iban: profile.bank_iban,
+      bank_address: profile.bank_address || '',
       other_payment_methods: profile.other_payment_methods
     };
 
@@ -853,8 +856,9 @@ app.get('/api/invoices/:id/html', async (req, res) => {
 
     const items = await query.all(`SELECT * FROM invoice_items WHERE invoice_id = ? ORDER BY order_index ASC`, [invoice.id]);
     const pageSize = req.query.pageSize || 'A4';
+    const template = req.query.template || invoice.template || 'fauget';
 
-    const html = renderInvoiceHtml({ ...invoice, items }, { pageSize, isForPdf: false });
+    const html = renderInvoiceHtml({ ...invoice, items, template }, { pageSize, isForPdf: false });
     res.setHeader('Content-Type', 'text/html');
     res.send(html);
   } catch (err) {
@@ -872,8 +876,9 @@ app.get('/api/invoices/:id/pdf', async (req, res) => {
 
     const items = await query.all(`SELECT * FROM invoice_items WHERE invoice_id = ? ORDER BY order_index ASC`, [invoice.id]);
     const pageSize = req.query.pageSize || 'A4';
+    const template = req.query.template || invoice.template || 'fauget';
 
-    const html = renderInvoiceHtml({ ...invoice, items }, { pageSize, isForPdf: true });
+    const html = renderInvoiceHtml({ ...invoice, items, template }, { pageSize, isForPdf: true });
     const pdfBuffer = await generatePdfFromHtml(html, { pageSize });
 
     const safeNumber = (invoice.invoice_number || 'invoice').replace(/[^a-zA-Z0-9_-]/g, '_');

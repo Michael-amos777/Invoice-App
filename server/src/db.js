@@ -64,6 +64,7 @@ export async function initDb() {
       bank_routing_number TEXT,
       bank_swift_bic TEXT,
       bank_iban TEXT,
+      bank_address TEXT,
       other_payment_methods TEXT,
       invoice_prefix TEXT DEFAULT 'INV-',
       next_invoice_number INTEGER DEFAULT 1001,
@@ -75,6 +76,12 @@ export async function initDb() {
 
   try {
     await query.run(`ALTER TABLE business_profiles ADD COLUMN show_name_with_logo INTEGER DEFAULT 1`);
+  } catch (err) {
+    // Column already exists
+  }
+
+  try {
+    await query.run(`ALTER TABLE business_profiles ADD COLUMN bank_address TEXT`);
   } catch (err) {
     // Column already exists
   }

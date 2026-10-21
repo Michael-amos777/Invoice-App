@@ -206,7 +206,7 @@ export const InvoiceViewer: React.FC<InvoiceViewerProps> = ({
 
           {/* Download PDF button */}
           <a
-            href={`/api/invoices/${invoice.id}/pdf?pageSize=${pageSize}`}
+            href={`/api/invoices/${invoice.id}/pdf?pageSize=${pageSize}&template=${activeTemplate}`}
             download
             className="inline-flex items-center gap-2 px-4 py-2 bg-teal-700 hover:bg-teal-800 text-white rounded-xl text-xs font-bold shadow-sm transition active:scale-95"
           >

@@ -647,6 +647,18 @@ export const ProfileSettings: React.FC<ProfileSettingsProps> = ({
             </div>
 
             <div>
+              <label className="block text-xs font-semibold text-slate-700 mb-1">Bank Address (Optional)</label>
+              <textarea
+                rows={2}
+                placeholder="e.g. 1801 Main St, Kansas City, MO 64108, USA"
+                value={formData.bank_address || ''}
+                onChange={(e) => setFormData({ ...formData, bank_address: e.target.value })}
+                className="w-full px-3.5 py-2 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-teal-500/20 focus:border-teal-600 resize-none"
+              />
+              <p className="text-[11px] text-slate-400 mt-1">Printed under bank details on invoices.</p>
+            </div>
+
+            <div>
               <label className="block text-xs font-semibold text-slate-700 mb-1">Other Payment Methods & Notes</label>
               <textarea
                 rows={2}

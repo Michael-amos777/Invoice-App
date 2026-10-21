@@ -174,7 +174,9 @@ export const InvoiceDocument: React.FC<InvoiceDocumentProps> = ({
           {(biz.bank_name || biz.bank_account_number) && (
             <div className="pt-4 border-t border-zinc-800 text-xs text-zinc-400 flex flex-wrap gap-x-6 gap-y-1">
               <div><strong className="text-zinc-200">Bank:</strong> {biz.bank_name}</div>
-              <div><strong className="text-zinc-200">Account:</strong> {biz.bank_account_number}</div>
+              {biz.bank_account_name && <div>{biz.bank_account_name}</div>}
+              <div>{biz.bank_account_number}</div>
+              {biz.bank_address && <div><strong className="text-zinc-200">Address:</strong> {biz.bank_address}</div>}
               {biz.bank_routing_number && <div><strong className="text-zinc-200">Routing:</strong> {biz.bank_routing_number}</div>}
               {biz.bank_iban && <div><strong className="text-zinc-200">IBAN:</strong> {biz.bank_iban}</div>}
             </div>
@@ -269,13 +271,22 @@ export const InvoiceDocument: React.FC<InvoiceDocumentProps> = ({
             </div>
             <div className="text-sm text-[#334449] leading-relaxed space-y-0.5">
               <div className="font-bold text-[#0c1a1e]">{biz.bank_name || 'Salford & Co.'}</div>
-              {biz.bank_account_name && <div className="text-xs text-slate-600">Acc Name: {biz.bank_account_name}</div>}
-              <div className="font-mono text-sm tracking-wide text-slate-800">{biz.bank_account_number || '0123 4567 8901 2345'}</div>
-              {biz.bank_iban && <div className="text-xs">IBAN: {biz.bank_iban}</div>}
-              {biz.bank_swift_bic && <div className="text-xs">SWIFT: {biz.bank_swift_bic}</div>}
-              {biz.bank_routing_number && <div className="text-xs">Routing/Sort: {biz.bank_routing_number}</div>}
+              {biz.bank_account_name && <div className="text-sm text-slate-700">{biz.bank_account_name}</div>}
+              {biz.bank_account_number && (
+                <div className="font-mono text-sm tracking-wide text-slate-800 font-medium">
+                  {biz.bank_account_number}
+                </div>
+              )}
+              {biz.bank_address && (
+                <div className="text-xs text-slate-500 whitespace-pre-line mt-1">
+                  {biz.bank_address}
+                </div>
+              )}
+              {biz.bank_routing_number && <div className="text-xs text-slate-600">Routing: {biz.bank_routing_number}</div>}
+              {biz.bank_swift_bic && <div className="text-xs text-slate-600">SWIFT: {biz.bank_swift_bic}</div>}
+              {biz.bank_iban && <div className="text-xs text-slate-600">IBAN: {biz.bank_iban}</div>}
               {biz.other_payment_methods && (
-                <div className="text-xs text-[#556970] mt-1 pt-1 border-t border-[#e2ddd3]">
+                <div className="text-xs text-[#556970] mt-1 pt-1 border-t border-[#e2ddd3] whitespace-pre-line">
                   {biz.other_payment_methods}
                 </div>
               )}
@@ -289,10 +300,10 @@ export const InvoiceDocument: React.FC<InvoiceDocumentProps> = ({
             className="text-white font-black text-xs uppercase tracking-widest grid grid-cols-12 px-6 py-3.5"
             style={{ background: `linear-gradient(135deg, ${primaryColor}, ${secondaryColor})` }}
           >
-            <div className="col-span-6 sm:col-span-7">ITEM DESCRIPTION</div>
-            <div className="col-span-2 text-center">QTY / TIME</div>
-            <div className="col-span-2 text-right">PRICE</div>
-            <div className="col-span-2 sm:col-span-1 text-right">TOTAL</div>
+            <div className="col-span-5 sm:col-span-5">ITEM DESCRIPTION</div>
+            <div className="col-span-2 sm:col-span-2 text-center">QTY / TIME</div>
+            <div className="col-span-2 sm:col-span-2 text-right pr-6">PRICE</div>
+            <div className="col-span-3 sm:col-span-3 text-right">TOTAL</div>
           </div>
 
           <div className="divide-y divide-[#f2efe9]">
@@ -305,13 +316,13 @@ export const InvoiceDocument: React.FC<InvoiceDocumentProps> = ({
 
               return (
                 <div key={item.id || index} className="grid grid-cols-12 px-6 py-4 text-sm items-center hover:bg-[#faf9f6] transition">
-                  <div className="col-span-6 sm:col-span-7 pr-3">
+                  <div className="col-span-5 sm:col-span-5 pr-3">
                     <div className="font-semibold text-[#112226]">{item.description || 'Ski Essentials Package'}</div>
                     {item.project && <div className="text-xs text-[#64748b] mt-0.5">{item.project}</div>}
                   </div>
-                  <div className="col-span-2 text-center text-[#475a61] text-xs sm:text-sm">{qtyStr}</div>
-                  <div className="col-span-2 text-right text-[#475a61] font-mono text-xs sm:text-sm">{rateStr}</div>
-                  <div className="col-span-2 sm:col-span-1 text-right font-bold text-[#0c1a1e] font-mono text-xs sm:text-sm">{totalStr}</div>
+                  <div className="col-span-2 sm:col-span-2 text-center text-[#475a61] text-xs sm:text-sm">{qtyStr}</div>
+                  <div className="col-span-2 sm:col-span-2 text-right pr-6 text-[#475a61] font-mono text-xs sm:text-sm">{rateStr}</div>
+                  <div className="col-span-3 sm:col-span-3 text-right font-bold text-[#0c1a1e] font-mono text-xs sm:text-sm">{totalStr}</div>
                 </div>
               );
             })}
