@@ -443,14 +443,18 @@ function renderFaugetTemplate({ invoice, biz, client, items, social, primaryColo
         <div>
           <div class="section-label">BANK DETAILS</div>
           <div class="party-details">
-            ${biz.bank_name ? `<div><strong>${escapeHtml(biz.bank_name)}</strong></div>` : ''}
-            ${biz.bank_account_name ? `<div>${escapeHtml(biz.bank_account_name)}</div>` : ''}
-            ${biz.bank_account_number ? `<div style="font-family: monospace; font-size: 13.5px; color: #1a2c31; font-weight: 500;">${escapeHtml(biz.bank_account_number)}</div>` : ''}
-            ${biz.bank_address ? `<div style="font-size: 12px; color: #556970; white-space: pre-line; margin-top: 2px;">${escapeHtml(biz.bank_address)}</div>` : ''}
-            ${biz.bank_routing_number ? `<div style="font-size: 12px; color: #475a61;">Routing: ${escapeHtml(biz.bank_routing_number)}</div>` : ''}
-            ${biz.bank_swift_bic ? `<div style="font-size: 12px; color: #475a61;">SWIFT: ${escapeHtml(biz.bank_swift_bic)}</div>` : ''}
-            ${biz.bank_iban ? `<div style="font-size: 12px; color: #475a61;">IBAN: ${escapeHtml(biz.bank_iban)}</div>` : ''}
-            ${biz.other_payment_methods ? `<div style="margin-top: 4px; font-size: 11.5px; color: #556970; white-space: pre-line;">${escapeHtml(biz.other_payment_methods)}</div>` : ''}
+            ${biz.bank_name ? `<div><span style="font-weight: 700; color: #0c1a1e;">Bank Name:</span> ${escapeHtml(biz.bank_name)}</div>` : ''}
+            ${biz.bank_account_name ? `<div><span style="font-weight: 700; color: #0c1a1e;">Account Name:</span> ${escapeHtml(biz.bank_account_name)}</div>` : ''}
+            ${biz.bank_account_number ? `<div><span style="font-weight: 700; color: #0c1a1e;">Account Number:</span> <span style="font-family: monospace; font-size: 13px; color: #1a2c31; font-weight: 600;">${escapeHtml(biz.bank_account_number)}</span></div>` : ''}
+            ${biz.bank_routing_number ? `<div><span style="font-weight: 700; color: #0c1a1e;">Routing Number:</span> <span style="font-family: monospace; font-size: 13px; color: #1a2c31; font-weight: 600;">${escapeHtml(biz.bank_routing_number)}</span></div>` : ''}
+            ${biz.bank_address ? `<div style="font-size: 12px; color: #556970; margin-top: 2px;"><span style="font-weight: 700; color: #0c1a1e;">Bank Address:</span> <span style="white-space: pre-line;">${escapeHtml(biz.bank_address)}</span></div>` : ''}
+            ${biz.bank_swift_bic ? `<div style="font-size: 12px; color: #475a61;"><span style="font-weight: 700; color: #0c1a1e;">SWIFT / BIC:</span> <span style="font-family: monospace;">${escapeHtml(biz.bank_swift_bic)}</span></div>` : ''}
+            ${biz.bank_iban ? `<div style="font-size: 12px; color: #475a61;"><span style="font-weight: 700; color: #0c1a1e;">IBAN:</span> <span style="font-family: monospace;">${escapeHtml(biz.bank_iban)}</span></div>` : ''}
+            ${biz.other_payment_methods ? `<div style="margin-top: 4px; font-size: 11.5px; color: #556970; white-space: pre-line; border-top: 1px solid #e2ddd3; padding-top: 3px;">${escapeHtml(biz.other_payment_methods)}</div>` : ''}
+            ${(!biz.bank_name && !biz.bank_account_number) ? `
+              <div><span style="font-weight: 700; color: #0c1a1e;">Bank Name:</span> Salford &amp; Co.</div>
+              <div><span style="font-weight: 700; color: #0c1a1e;">Account Number:</span> <span style="font-family: monospace; font-size: 13px; color: #1a2c31; font-weight: 600;">0123 4567 8901 2345</span></div>
+            ` : ''}
           </div>
         </div>
       </div>
@@ -853,10 +857,15 @@ function renderStudioTemplate({ invoice, biz, client, items, social, primaryColo
 
       ${biz.bank_name || biz.bank_account_number ? `
         <div class="banking-info">
-          Payable to: ${escapeHtml(biz.bank_account_name || biz.business_name || '')} | 
-          Bank: ${escapeHtml(biz.bank_name || '')} | 
-          Account: ${escapeHtml(biz.bank_account_number || '')}
-          ${biz.bank_address ? ` | Bank Address: ${escapeHtml(biz.bank_address)}` : ''}
+          ${[
+            biz.bank_name ? `<span><strong style="color: #E4E4E7;">Bank Name:</strong> ${escapeHtml(biz.bank_name)}</span>` : '',
+            biz.bank_account_name ? `<span><strong style="color: #E4E4E7;">Account Name:</strong> ${escapeHtml(biz.bank_account_name)}</span>` : '',
+            biz.bank_account_number ? `<span><strong style="color: #E4E4E7;">Account Number:</strong> <span style="font-family: monospace; color: #FFFFFF;">${escapeHtml(biz.bank_account_number)}</span></span>` : '',
+            biz.bank_routing_number ? `<span><strong style="color: #E4E4E7;">Routing Number:</strong> <span style="font-family: monospace; color: #FFFFFF;">${escapeHtml(biz.bank_routing_number)}</span></span>` : '',
+            biz.bank_address ? `<span><strong style="color: #E4E4E7;">Bank Address:</strong> ${escapeHtml(biz.bank_address)}</span>` : '',
+            biz.bank_swift_bic ? `<span><strong style="color: #E4E4E7;">SWIFT / BIC:</strong> <span style="font-family: monospace;">${escapeHtml(biz.bank_swift_bic)}</span></span>` : '',
+            biz.bank_iban ? `<span><strong style="color: #E4E4E7;">IBAN:</strong> <span style="font-family: monospace;">${escapeHtml(biz.bank_iban)}</span></span>` : ''
+          ].filter(Boolean).join(' | ')}
         </div>
       ` : ''}
     </div>

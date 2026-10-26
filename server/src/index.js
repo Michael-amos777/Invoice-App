@@ -995,3 +995,5 @@ if (fs.existsSync(clientDistDir)) {
 app.listen(PORT, () => {
   console.log(`Invoice server running on http://localhost:${PORT}`);
 });
+
+export default app;

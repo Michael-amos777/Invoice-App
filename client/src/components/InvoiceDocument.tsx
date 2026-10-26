@@ -172,13 +172,14 @@ export const InvoiceDocument: React.FC<InvoiceDocumentProps> = ({
 
           {/* Banking footer */}
           {(biz.bank_name || biz.bank_account_number) && (
-            <div className="pt-4 border-t border-zinc-800 text-xs text-zinc-400 flex flex-wrap gap-x-6 gap-y-1">
-              <div><strong className="text-zinc-200">Bank:</strong> {biz.bank_name}</div>
-              {biz.bank_account_name && <div>{biz.bank_account_name}</div>}
-              <div>{biz.bank_account_number}</div>
-              {biz.bank_address && <div><strong className="text-zinc-200">Address:</strong> {biz.bank_address}</div>}
-              {biz.bank_routing_number && <div><strong className="text-zinc-200">Routing:</strong> {biz.bank_routing_number}</div>}
-              {biz.bank_iban && <div><strong className="text-zinc-200">IBAN:</strong> {biz.bank_iban}</div>}
+            <div className="pt-4 border-t border-zinc-800 text-xs text-zinc-400 flex flex-wrap gap-x-6 gap-y-1.5">
+              {biz.bank_name && <div><strong className="text-zinc-200">Bank Name:</strong> {biz.bank_name}</div>}
+              {biz.bank_account_name && <div><strong className="text-zinc-200">Account Name:</strong> {biz.bank_account_name}</div>}
+              {biz.bank_account_number && <div><strong className="text-zinc-200">Account Number:</strong> <span className="font-mono text-zinc-200">{biz.bank_account_number}</span></div>}
+              {biz.bank_routing_number && <div><strong className="text-zinc-200">Routing Number:</strong> <span className="font-mono text-zinc-200">{biz.bank_routing_number}</span></div>}
+              {biz.bank_address && <div><strong className="text-zinc-200">Bank Address:</strong> {biz.bank_address}</div>}
+              {biz.bank_swift_bic && <div><strong className="text-zinc-200">SWIFT / BIC:</strong> <span className="font-mono">{biz.bank_swift_bic}</span></div>}
+              {biz.bank_iban && <div><strong className="text-zinc-200">IBAN:</strong> <span className="font-mono">{biz.bank_iban}</span></div>}
             </div>
           )}
         </div>
@@ -269,22 +270,59 @@ export const InvoiceDocument: React.FC<InvoiceDocumentProps> = ({
               <Landmark className="w-3.5 h-3.5 text-[#0E6973]" />
               <span>BANK DETAILS</span>
             </div>
-            <div className="text-sm text-[#334449] leading-relaxed space-y-0.5">
-              <div className="font-bold text-[#0c1a1e]">{biz.bank_name || 'Salford & Co.'}</div>
-              {biz.bank_account_name && <div className="text-sm text-slate-700">{biz.bank_account_name}</div>}
-              {biz.bank_account_number && (
-                <div className="font-mono text-sm tracking-wide text-slate-800 font-medium">
-                  {biz.bank_account_number}
+            <div className="text-sm text-[#334449] leading-relaxed space-y-1">
+              {biz.bank_name ? (
+                <div>
+                  <span className="font-bold text-[#0c1a1e]">Bank Name: </span>
+                  <span>{biz.bank_name}</span>
+                </div>
+              ) : (!biz.bank_account_number && (
+                <div>
+                  <span className="font-bold text-[#0c1a1e]">Bank Name: </span>
+                  <span>Salford & Co.</span>
+                </div>
+              ))}
+              {biz.bank_account_name && (
+                <div>
+                  <span className="font-bold text-[#0c1a1e]">Account Name: </span>
+                  <span>{biz.bank_account_name}</span>
+                </div>
+              )}
+              {biz.bank_account_number ? (
+                <div>
+                  <span className="font-bold text-[#0c1a1e]">Account Number: </span>
+                  <span className="font-mono font-medium text-slate-900">{biz.bank_account_number}</span>
+                </div>
+              ) : (!biz.bank_name && (
+                <div>
+                  <span className="font-bold text-[#0c1a1e]">Account Number: </span>
+                  <span className="font-mono font-medium text-slate-900">0123 4567 8901 2345</span>
+                </div>
+              ))}
+              {biz.bank_routing_number && (
+                <div>
+                  <span className="font-bold text-[#0c1a1e]">Routing Number: </span>
+                  <span className="font-mono font-medium text-slate-800">{biz.bank_routing_number}</span>
                 </div>
               )}
               {biz.bank_address && (
-                <div className="text-xs text-slate-500 whitespace-pre-line mt-1">
-                  {biz.bank_address}
+                <div className="text-xs text-slate-600 mt-0.5">
+                  <span className="font-bold text-[#0c1a1e]">Bank Address: </span>
+                  <span className="whitespace-pre-line">{biz.bank_address}</span>
                 </div>
               )}
-              {biz.bank_routing_number && <div className="text-xs text-slate-600">Routing: {biz.bank_routing_number}</div>}
-              {biz.bank_swift_bic && <div className="text-xs text-slate-600">SWIFT: {biz.bank_swift_bic}</div>}
-              {biz.bank_iban && <div className="text-xs text-slate-600">IBAN: {biz.bank_iban}</div>}
+              {biz.bank_swift_bic && (
+                <div className="text-xs text-slate-600">
+                  <span className="font-bold text-[#0c1a1e]">SWIFT / BIC: </span>
+                  <span className="font-mono">{biz.bank_swift_bic}</span>
+                </div>
+              )}
+              {biz.bank_iban && (
+                <div className="text-xs text-slate-600">
+                  <span className="font-bold text-[#0c1a1e]">IBAN: </span>
+                  <span className="font-mono">{biz.bank_iban}</span>
+                </div>
+              )}
               {biz.other_payment_methods && (
                 <div className="text-xs text-[#556970] mt-1 pt-1 border-t border-[#e2ddd3] whitespace-pre-line">
                   {biz.other_payment_methods}
