@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Invoice, BusinessProfile } from '../types';
 import { InvoiceDocument } from './InvoiceDocument';
 import { PaymentModal } from './PaymentModal';
+import { exportElementToPdf } from '../utils/pdfExport';
 import { 
   ArrowLeft, 
   Download, 
@@ -14,7 +15,8 @@ import {
   Clock,
   Layers,
   Sparkles,
-  ExternalLink
+  ExternalLink,
+  Loader2
 } from 'lucide-react';
 
 interface InvoiceViewerProps {
@@ -38,6 +40,25 @@ export const InvoiceViewer: React.FC<InvoiceViewerProps> = ({
   const [pageSize, setPageSize] = useState<'A4' | 'Letter'>('A4');
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState<boolean>(false);
   const [activeTemplate, setActiveTemplate] = useState<'fauget' | 'studio'>('fauget');
+  const [isGeneratingPdf, setIsGeneratingPdf] = useState<boolean>(false);
+  const documentRef = useRef<HTMLDivElement>(null);
+
+  const handleDownloadPdf = async () => {
+    if (!documentRef.current || !invoice) return;
+    setIsGeneratingPdf(true);
+    try {
+      const safeNumber = (invoice.invoice_number || 'invoice').replace(/[^a-zA-Z0-9_-]/g, '_');
+      await exportElementToPdf(documentRef.current, {
+        filename: `Invoice-${safeNumber}.pdf`,
+        pageSize
+      });
+    } catch (err: any) {
+      console.error('In-browser PDF export error, attempting server fallback:', err);
+      window.location.href = `/api/invoices/${invoice.id}/pdf?pageSize=${pageSize}&template=${activeTemplate}`;
+    } finally {
+      setIsGeneratingPdf(false);
+    }
+  };
 
   const fetchInvoice = () => {
     setIsLoading(true);
@@ -205,20 +226,30 @@ export const InvoiceViewer: React.FC<InvoiceViewerProps> = ({
           </button>
 
           {/* Download PDF button */}
-          <a
-            href={`/api/invoices/${invoice.id}/pdf?pageSize=${pageSize}&template=${activeTemplate}`}
-            download
-            className="inline-flex items-center gap-2 px-4 py-2 bg-teal-700 hover:bg-teal-800 text-white rounded-xl text-xs font-bold shadow-sm transition active:scale-95"
+          <button
+            onClick={handleDownloadPdf}
+            disabled={isGeneratingPdf}
+            className="inline-flex items-center gap-2 px-4 py-2 bg-teal-700 hover:bg-teal-800 text-white rounded-xl text-xs font-bold shadow-sm transition active:scale-95 disabled:opacity-75 disabled:cursor-wait"
+            title="Download PDF directly to your device"
           >
-            <Download className="w-4 h-4 stroke-[2.5]" />
-            <span>Download PDF</span>
-          </a>
+            {isGeneratingPdf ? (
+              <>
+                <Loader2 className="w-4 h-4 stroke-[2.5] animate-spin" />
+                <span>Generating PDF...</span>
+              </>
+            ) : (
+              <>
+                <Download className="w-4 h-4 stroke-[2.5]" />
+                <span>Download PDF</span>
+              </>
+            )}
+          </button>
         </div>
       </div>
 
       {/* Standalone Document Viewer Sheet */}
       <div className="bg-slate-200/60 p-4 sm:p-10 rounded-3xl overflow-x-auto flex justify-center shadow-inner">
-        <div className="shadow-2xl rounded-none transition-all duration-300">
+        <div ref={documentRef} id="invoice-document-sheet" className="shadow-2xl rounded-none transition-all duration-300">
           <InvoiceDocument
             invoice={{ ...invoice, template: activeTemplate }}
             profile={profile}

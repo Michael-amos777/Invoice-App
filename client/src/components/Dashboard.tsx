@@ -264,7 +264,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
                         </button>
                         <a
                           href={`/api/invoices/${inv.id}/pdf`}
-                          download
+                          download={`Invoice-${(inv.invoice_number || 'invoice').replace(/[^a-zA-Z0-9_-]/g, '_')}.pdf`}
                           className="p-1.5 text-slate-500 hover:text-teal-700 hover:bg-teal-50 rounded-lg transition"
                           title="Download PDF"
                         >

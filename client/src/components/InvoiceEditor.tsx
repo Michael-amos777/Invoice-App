@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { 
   Invoice, 
   InvoiceItem, 
@@ -11,6 +11,7 @@ import {
   formatCurrency 
 } from '../utils/calculations';
 import { InvoiceDocument } from './InvoiceDocument';
+import { exportElementToPdf } from '../utils/pdfExport';
 import { 
   Plus, 
   Trash2, 
@@ -26,7 +27,8 @@ import {
   Sliders,
   Layers,
   RotateCcw,
-  X
+  X,
+  Loader2
 } from 'lucide-react';
 
 interface InvoiceEditorProps {
@@ -48,6 +50,24 @@ export const InvoiceEditor: React.FC<InvoiceEditorProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [showPreviewModal, setShowPreviewModal] = useState<boolean>(false);
   const [pageSize, setPageSize] = useState<'A4' | 'Letter'>('A4');
+  const [isDownloadingPreview, setIsDownloadingPreview] = useState<boolean>(false);
+  const previewDocumentRef = useRef<HTMLDivElement>(null);
+
+  const handleDownloadPreviewPdf = async () => {
+    if (!previewDocumentRef.current) return;
+    setIsDownloadingPreview(true);
+    try {
+      const safeNumber = (invoiceNumber || 'draft').replace(/[^a-zA-Z0-9_-]/g, '_');
+      await exportElementToPdf(previewDocumentRef.current, {
+        filename: `Invoice-${safeNumber}.pdf`,
+        pageSize
+      });
+    } catch (err: any) {
+      console.error('Failed to download preview PDF:', err);
+    } finally {
+      setIsDownloadingPreview(false);
+    }
+  };
 
   // Close full preview on Escape key press
   useEffect(() => {
@@ -1097,6 +1117,26 @@ export const InvoiceEditor: React.FC<InvoiceEditorProps> = ({
 
                 <button
                   type="button"
+                  onClick={handleDownloadPreviewPdf}
+                  disabled={isDownloadingPreview}
+                  className="px-3.5 py-1.5 bg-teal-600 hover:bg-teal-700 text-white text-xs font-bold rounded-lg flex items-center gap-1.5 transition shadow-xs disabled:opacity-75 disabled:cursor-wait"
+                  title="Download PDF directly to your device"
+                >
+                  {isDownloadingPreview ? (
+                    <>
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                      <span>Exporting...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Download className="w-3.5 h-3.5" />
+                      <span>Download PDF</span>
+                    </>
+                  )}
+                </button>
+
+                <button
+                  type="button"
                   onClick={() => window.print()}
                   className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-white text-xs font-semibold rounded-lg flex items-center gap-1.5 transition"
                 >
@@ -1107,7 +1147,7 @@ export const InvoiceEditor: React.FC<InvoiceEditorProps> = ({
                 <button
                   type="button"
                   onClick={() => setShowPreviewModal(false)}
-                  className="px-3.5 py-1.5 bg-teal-600 hover:bg-teal-700 text-white text-xs font-bold rounded-lg transition flex items-center gap-1.5 shadow-xs cursor-pointer"
+                  className="px-3.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold rounded-lg transition flex items-center gap-1.5 shadow-xs cursor-pointer"
                 >
                   <X className="w-4 h-4" />
                   <span>Close Preview</span>
@@ -1117,7 +1157,7 @@ export const InvoiceEditor: React.FC<InvoiceEditorProps> = ({
 
             {/* Document sheet */}
             <div className="bg-slate-200/90 p-4 sm:p-10 overflow-x-auto flex justify-center">
-              <div className="shadow-2xl">
+              <div ref={previewDocumentRef} className="shadow-2xl">
                 <InvoiceDocument
                   invoice={previewInvoice}
                   profile={profile}
