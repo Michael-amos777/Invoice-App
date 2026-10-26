@@ -53,8 +53,8 @@ export const InvoiceViewer: React.FC<InvoiceViewerProps> = ({
         pageSize
       });
     } catch (err: any) {
-      console.error('In-browser PDF export error, attempting server fallback:', err);
-      window.location.href = `/api/invoices/${invoice.id}/pdf?pageSize=${pageSize}&template=${activeTemplate}`;
+      console.error('In-browser PDF export error:', err);
+      setError('Could not generate PDF directly in browser: ' + (err.message || 'Unknown error'));
     } finally {
       setIsGeneratingPdf(false);
     }

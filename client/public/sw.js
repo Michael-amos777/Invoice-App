@@ -1,5 +1,5 @@
 // Invoicr Pro Service Worker for PWA Offline and Installability
-const CACHE_NAME = 'invoicr-pro-v1';
+const CACHE_NAME = 'invoicr-pro-v2';
 const STATIC_ASSETS = [
   '/',
   '/index.html',
@@ -41,7 +41,23 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Stale-while-revalidate for static assets
+  // Network-First for HTML navigation so deployed updates on Render are instantly loaded
+  if (event.request.mode === 'navigate' || event.request.headers.get('accept')?.includes('text/html')) {
+    event.respondWith(
+      fetch(event.request)
+        .then((response) => {
+          if (response && response.status === 200) {
+            const clone = response.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
+          }
+          return response;
+        })
+        .catch(() => caches.match(event.request).then((cached) => cached || caches.match('/index.html')))
+    );
+    return;
+  }
+
+  // Stale-while-revalidate for hashed static assets
   event.respondWith(
     caches.match(event.request).then((cached) => {
       const networked = fetch(event.request).then((response) => {
