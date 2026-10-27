@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Invoice, BusinessProfile } from '../types';
 import { InvoiceDocument } from './InvoiceDocument';
 import { PaymentModal } from './PaymentModal';
-import { exportElementToPdf } from '../utils/pdfExport';
+import { exportElementToPdf, downloadInvoiceWithFallback } from '../utils/pdfExport';
 import { 
   ArrowLeft, 
   Download, 
@@ -44,17 +44,18 @@ export const InvoiceViewer: React.FC<InvoiceViewerProps> = ({
   const documentRef = useRef<HTMLDivElement>(null);
 
   const handleDownloadPdf = async () => {
-    if (!documentRef.current || !invoice) return;
+    if (!invoice) return;
     setIsGeneratingPdf(true);
     try {
-      const safeNumber = (invoice.invoice_number || 'invoice').replace(/[^a-zA-Z0-9_-]/g, '_');
-      await exportElementToPdf(documentRef.current, {
-        filename: `Invoice-${safeNumber}.pdf`,
-        pageSize
-      });
+      await downloadInvoiceWithFallback(
+        { ...invoice, template: activeTemplate },
+        profile,
+        pageSize,
+        documentRef.current
+      );
     } catch (err: any) {
-      console.error('In-browser PDF export error:', err);
-      setError('Could not generate PDF directly in browser: ' + (err.message || 'Unknown error'));
+      console.error('PDF export error:', err);
+      setError('Could not generate PDF: ' + (err.message || 'Unknown error'));
     } finally {
       setIsGeneratingPdf(false);
     }

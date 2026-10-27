@@ -1,5 +1,9 @@
 import html2canvas from 'html2canvas';
 import { jsPDF } from 'jspdf';
+import React from 'react';
+import { createRoot } from 'react-dom/client';
+import { Invoice, BusinessProfile } from '../types';
+import { InvoiceDocument } from '../components/InvoiceDocument';
 
 export interface ExportPdfOptions {
   filename?: string;
@@ -51,12 +55,14 @@ export async function exportElementToPdf(
   const images = Array.from(element.querySelectorAll('img'));
   await Promise.all(images.map(img => inlineImageAsBase64(img)));
 
+  const isDark = element.querySelector('.bg-black') !== null;
+
   // Render the invoice DOM tree to a high-resolution canvas
   const canvas = await html2canvas(element, {
     scale: 2, // 2x device scale ensures crisp vector-like typography and sharp logos
     useCORS: true,
     allowTaint: false, // Strict false: prevents DOMException SecurityError on toDataURL
-    backgroundColor: '#ffffff',
+    backgroundColor: isDark ? '#000000' : '#ffffff',
     logging: false,
     imageTimeout: 8000,
     windowWidth: element.scrollWidth,
@@ -103,4 +109,101 @@ export async function exportElementToPdf(
 
   // Trigger immediate native file download
   pdf.save(safeFilename);
+}
+
+/**
+ * Off-screen rendering fallback: mounts InvoiceDocument in a hidden container,
+ * generates the PDF using html2canvas & jsPDF, and immediately cleans up the container.
+ */
+async function renderOffscreenAndExport(
+  invoice: Invoice | Partial<Invoice>,
+  profile?: BusinessProfile | null,
+  pageSize: 'A4' | 'Letter' = 'A4',
+  filename: string = 'invoice.pdf'
+): Promise<void> {
+  const container = document.createElement('div');
+  container.style.position = 'fixed';
+  container.style.left = '-9999px';
+  container.style.top = '0';
+  container.style.width = pageSize === 'Letter' ? '800px' : '794px';
+  container.style.zIndex = '-9999';
+  container.style.pointerEvents = 'none';
+  document.body.appendChild(container);
+
+  try {
+    const root = createRoot(container);
+    root.render(
+      React.createElement(InvoiceDocument, {
+        invoice,
+        profile: profile || undefined,
+        pageSize
+      })
+    );
+
+    // Allow DOM layout and fonts to resolve
+    await new Promise(resolve => setTimeout(resolve, 300));
+
+    await exportElementToPdf(container, { filename, pageSize });
+    root.unmount();
+  } finally {
+    if (document.body.contains(container)) {
+      document.body.removeChild(container);
+    }
+  }
+}
+
+/**
+ * Universal invoice PDF download orchestrator:
+ * 1. Attempts to fetch the native vector PDF from the server endpoint.
+ * 2. If the server is offline or fails, falls back gracefully to in-browser client generation.
+ * 3. Never downloads error pages as .htm files.
+ */
+export async function downloadInvoiceWithFallback(
+  invoice: Invoice | Partial<Invoice>,
+  profile?: BusinessProfile | null,
+  pageSize: 'A4' | 'Letter' = 'A4',
+  existingElement?: HTMLElement | null
+): Promise<void> {
+  const safeNumber = (invoice.invoice_number || 'invoice').replace(/[^a-zA-Z0-9_-]/g, '_');
+  const filename = `Invoice-${safeNumber}.pdf`;
+
+  // 1. Try server-side generation
+  if (invoice.id) {
+    try {
+      const template = invoice.template || 'fauget';
+      const response = await fetch(`/api/invoices/${invoice.id}/pdf?pageSize=${pageSize}&template=${template}`, {
+        headers: {
+          'Accept': 'application/pdf'
+        }
+      });
+
+      const contentType = response.headers.get('content-type') || '';
+      if (response.ok && (contentType.includes('application/pdf') || contentType.includes('octet-stream'))) {
+        const blob = await response.blob();
+        if (blob.size > 200) {
+          const blobUrl = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = blobUrl;
+          a.download = filename;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          setTimeout(() => URL.revokeObjectURL(blobUrl), 1000);
+          return;
+        }
+      }
+      console.warn('Server PDF endpoint did not return valid PDF, falling back to client-side generation:', response.status);
+    } catch (networkErr) {
+      console.warn('Network error requesting server PDF, falling back to client-side generation:', networkErr);
+    }
+  }
+
+  // 2. Client-side fallback: use existing mounted element if available
+  if (existingElement) {
+    await exportElementToPdf(existingElement, { filename, pageSize });
+    return;
+  }
+
+  // 3. Client-side fallback: render offscreen and export
+  await renderOffscreenAndExport(invoice, profile, pageSize, filename);
 }

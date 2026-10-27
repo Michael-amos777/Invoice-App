@@ -1,12 +1,15 @@
 import { execFile } from 'child_process';
 import fs from 'fs/promises';
+import fsSync from 'fs';
 import path from 'path';
 import os from 'os';
 import { v4 as uuidv4 } from 'uuid';
+import { pathToFileURL } from 'url';
 
-import fsSync from 'fs';
-
-function getBrowserPath() {
+export function getBrowserPath() {
+  if (process.env.PUPPETEER_EXECUTABLE_PATH && fsSync.existsSync(process.env.PUPPETEER_EXECUTABLE_PATH)) {
+    return process.env.PUPPETEER_EXECUTABLE_PATH;
+  }
   if (process.env.CHROMIUM_PATH && fsSync.existsSync(process.env.CHROMIUM_PATH)) {
     return process.env.CHROMIUM_PATH;
   }
@@ -24,6 +27,7 @@ function getBrowserPath() {
     for (const p of winPaths) {
       if (fsSync.existsSync(p)) return p;
     }
+    return 'msedge';
   } else if (process.platform === 'darwin') {
     const macPaths = [
       '/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge',
@@ -33,11 +37,13 @@ function getBrowserPath() {
     for (const p of macPaths) {
       if (fsSync.existsSync(p)) return p;
     }
+    return null;
   } else {
-    // Linux
+    // Linux (Railway, Render, Docker, Ubuntu, Debian, Nixpacks)
     const linuxPaths = [
       '/usr/bin/chromium',
       '/usr/bin/chromium-browser',
+      '/etc/profiles/per-user/root/bin/chromium',
       '/usr/bin/google-chrome',
       '/usr/bin/google-chrome-stable',
       '/snap/bin/chromium'
@@ -45,11 +51,16 @@ function getBrowserPath() {
     for (const p of linuxPaths) {
       if (fsSync.existsSync(p)) return p;
     }
+    return null;
   }
-  return 'msedge';
 }
 
 export async function generatePdfFromHtml(htmlContent, options = {}) {
+  const browserBin = getBrowserPath();
+  if (!browserBin) {
+    throw new Error('No headless Chromium browser binary found on this system');
+  }
+
   const { pageSize = 'A4' } = options;
   const tempDir = os.tmpdir();
   const id = uuidv4();
@@ -59,34 +70,40 @@ export async function generatePdfFromHtml(htmlContent, options = {}) {
   try {
     await fs.writeFile(tempHtmlPath, htmlContent, 'utf8');
 
-    const browserBin = getBrowserPath();
-    // Run headless Chromium/Edge to produce 100% native Chromium vector PDF
-    const args = [
-      '--headless=new',
+    // Convert OS path to RFC-compliant file:/// URL (3 slashes on both Linux and Windows)
+    const fileUrl = pathToFileURL(tempHtmlPath).href;
+
+    const baseFlags = [
       '--no-sandbox',
       '--disable-setuid-sandbox',
       '--disable-dev-shm-usage',
       '--disable-gpu',
-      '--no-pdf-header-footer',
+      '--no-pdf-header-footer'
+    ];
+
+    if (process.platform === 'linux') {
+      baseFlags.push('--disable-software-rasterizer');
+    }
+
+    const args = [
+      '--headless=new',
+      ...baseFlags,
       '--run-all-compositor-stages-before-draw',
       `--print-to-pdf=${tempPdfPath}`,
-      `file:///${tempHtmlPath.replace(/\\/g, '/')}`
+      fileUrl
     ];
 
     await new Promise((resolve, reject) => {
-      execFile(browserBin, args, { timeout: 15000 }, (error, stdout, stderr) => {
+      execFile(browserBin, args, { timeout: 25000 }, (error) => {
         if (error) {
-          // If --headless=new had an issue, fallback to legacy --headless
-          execFile(browserBin, [
+          // If --headless=new encounters issues, fallback to legacy --headless
+          const legacyArgs = [
             '--headless',
-            '--no-sandbox',
-            '--disable-setuid-sandbox',
-            '--disable-dev-shm-usage',
-            '--disable-gpu',
-            '--no-pdf-header-footer',
+            ...baseFlags,
             `--print-to-pdf=${tempPdfPath}`,
-            `file:///${tempHtmlPath.replace(/\\/g, '/')}`
-          ], { timeout: 15000 }, (err2) => {
+            fileUrl
+          ];
+          execFile(browserBin, legacyArgs, { timeout: 25000 }, (err2) => {
             if (err2) reject(err2);
             else resolve();
           });
@@ -97,10 +114,12 @@ export async function generatePdfFromHtml(htmlContent, options = {}) {
     });
 
     const pdfBuffer = await fs.readFile(tempPdfPath);
+    if (!pdfBuffer || pdfBuffer.length === 0) {
+      throw new Error('Chromium produced an empty PDF');
+    }
     return pdfBuffer;
   } finally {
-    // Clean up temporary files
-    try { await fs.unlink(tempHtmlPath); } catch (e) {}
-    try { await fs.unlink(tempPdfPath); } catch (e) {}
+    try { await fs.unlink(tempHtmlPath); } catch {}
+    try { await fs.unlink(tempPdfPath); } catch {}
   }
 }

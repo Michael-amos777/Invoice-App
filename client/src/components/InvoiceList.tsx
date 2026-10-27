@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Invoice, BusinessProfile, Client } from '../types';
 import { formatCurrency, formatDisplayDate } from '../utils/calculations';
 import { PaymentModal } from './PaymentModal';
+import { downloadInvoiceWithFallback } from '../utils/pdfExport';
 import { 
   Search, 
   Filter, 
@@ -17,7 +18,8 @@ import {
   FileText,
   Calendar,
   MoreVertical,
-  ExternalLink
+  ExternalLink,
+  Loader2
 } from 'lucide-react';
 
 interface InvoiceListProps {
@@ -44,6 +46,27 @@ export const InvoiceList: React.FC<InvoiceListProps> = ({
   const [clientFilter, setClientFilter] = useState<string>('all');
   const [activePaymentInvoice, setActivePaymentInvoice] = useState<Invoice | null>(null);
   const [actionDropdownId, setActionDropdownId] = useState<string | null>(null);
+  const [downloadingId, setDownloadingId] = useState<string | null>(null);
+
+  const handleDownload = async (inv: Invoice) => {
+    setDownloadingId(inv.id);
+    try {
+      let fullInv = inv;
+      if (!inv.items || inv.items.length === 0) {
+        try {
+          const res = await fetch(`/api/invoices/${inv.id}`);
+          if (res.ok) {
+            fullInv = await res.json();
+          }
+        } catch {}
+      }
+      await downloadInvoiceWithFallback(fullInv, profile, 'A4');
+    } catch (err) {
+      console.error('Failed to download invoice:', err);
+    } finally {
+      setDownloadingId(null);
+    }
+  };
 
   // Filter invoices
   const filtered = invoices.filter(inv => {
@@ -300,14 +323,19 @@ export const InvoiceList: React.FC<InvoiceListProps> = ({
                         </button>
 
                         {/* Download PDF Action */}
-                        <a
-                          href={`/api/invoices/${inv.id}/pdf`}
-                          download={`Invoice-${(inv.invoice_number || 'invoice').replace(/[^a-zA-Z0-9_-]/g, '_')}.pdf`}
-                          className="p-1.5 text-slate-600 hover:text-teal-700 hover:bg-teal-50 rounded-lg transition"
-                          title="Download Native PDF"
+                        <button
+                          type="button"
+                          onClick={() => handleDownload(inv)}
+                          disabled={downloadingId === inv.id}
+                          className="p-1.5 text-slate-600 hover:text-teal-700 hover:bg-teal-50 rounded-lg transition disabled:opacity-50 cursor-pointer"
+                          title="Download Invoice PDF"
                         >
-                          <Download className="w-4 h-4" />
-                        </a>
+                          {downloadingId === inv.id ? (
+                            <Loader2 className="w-4 h-4 animate-spin text-teal-600" />
+                          ) : (
+                            <Download className="w-4 h-4" />
+                          )}
+                        </button>
 
                         {/* Edit Draft */}
                         {inv.status === 'draft' && (

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { 
   FileText, 
   DollarSign, 
@@ -12,8 +12,10 @@ import {
   Sparkles,
   Building2,
   ChevronRight,
-  RotateCcw
+  RotateCcw,
+  Loader2
 } from 'lucide-react';
+import { downloadInvoiceWithFallback } from '../utils/pdfExport';
 import { DashboardStats, BusinessProfile, Invoice } from '../types';
 import { formatCurrency, formatDisplayDate } from '../utils/calculations';
 
@@ -34,6 +36,27 @@ export const Dashboard: React.FC<DashboardProps> = ({
 }) => {
   const currency = profile?.default_currency || 'USD';
   const primaryColor = profile?.primary_color || '#0E6973';
+  const [downloadingId, setDownloadingId] = useState<string | null>(null);
+
+  const handleDownload = async (inv: Invoice) => {
+    setDownloadingId(inv.id);
+    try {
+      let fullInv = inv;
+      if (!inv.items || inv.items.length === 0) {
+        try {
+          const res = await fetch(`/api/invoices/${inv.id}`);
+          if (res.ok) {
+            fullInv = await res.json();
+          }
+        } catch {}
+      }
+      await downloadInvoiceWithFallback(fullInv, profile, 'A4');
+    } catch (err) {
+      console.error('Failed to download invoice:', err);
+    } finally {
+      setDownloadingId(null);
+    }
+  };
 
   const cards = [
     {
@@ -262,14 +285,19 @@ export const Dashboard: React.FC<DashboardProps> = ({
                         >
                           View
                         </button>
-                        <a
-                          href={`/api/invoices/${inv.id}/pdf`}
-                          download={`Invoice-${(inv.invoice_number || 'invoice').replace(/[^a-zA-Z0-9_-]/g, '_')}.pdf`}
-                          className="p-1.5 text-slate-500 hover:text-teal-700 hover:bg-teal-50 rounded-lg transition"
-                          title="Download PDF"
+                        <button
+                          type="button"
+                          onClick={() => handleDownload(inv)}
+                          disabled={downloadingId === inv.id}
+                          className="p-1.5 text-slate-500 hover:text-teal-700 hover:bg-teal-50 rounded-lg transition disabled:opacity-50 cursor-pointer"
+                          title="Download Invoice PDF"
                         >
-                          <Download className="w-4 h-4" />
-                        </a>
+                          {downloadingId === inv.id ? (
+                            <Loader2 className="w-4 h-4 animate-spin text-teal-600" />
+                          ) : (
+                            <Download className="w-4 h-4" />
+                          )}
+                        </button>
                       </div>
                     </td>
                   </tr>

@@ -9,6 +9,7 @@ import db, { initDb, query, resetDatabase, seedDemoData } from './db.js';
 import { calculateInvoiceTotals, calculateItemTotal, roundToTwoDecimals } from './utils/calculations.js';
 import { renderInvoiceHtml } from './utils/templateRenderer.js';
 import { generatePdfFromHtml } from './utils/pdfGenerator.js';
+import { generatePdfWithPdfKit } from './utils/pdfKitGenerator.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -882,15 +883,23 @@ app.get('/api/invoices/:id/pdf', async (req, res) => {
     const pageSize = req.query.pageSize || 'A4';
     const template = req.query.template || invoice.template || 'fauget';
 
-    const html = renderInvoiceHtml({ ...invoice, items, template }, { pageSize, isForPdf: true });
-    const pdfBuffer = await generatePdfFromHtml(html, { pageSize });
+    let pdfBuffer;
+    try {
+      // 1. Try high-fidelity Chromium HTML render if browser is present
+      const html = renderInvoiceHtml({ ...invoice, items, template }, { pageSize, isForPdf: true });
+      pdfBuffer = await generatePdfFromHtml(html, { pageSize });
+    } catch (chromeErr) {
+      console.warn('Chromium PDF export unavailable or failed, utilizing native PDFKit vector engine:', chromeErr.message);
+      // 2. 100% fail-safe pure Node PDFKit generator
+      pdfBuffer = await generatePdfWithPdfKit(invoice, items, { pageSize });
+    }
 
     const safeNumber = (invoice.invoice_number || 'invoice').replace(/[^a-zA-Z0-9_-]/g, '_');
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader('Content-Disposition', `attachment; filename="Invoice-${safeNumber}.pdf"`);
     res.send(pdfBuffer);
   } catch (err) {
-    console.error('PDF generation error:', err);
+    console.error('Fatal PDF generation error:', err);
     res.status(500).send(`Failed to generate PDF: ${err.message}`);
   }
 });

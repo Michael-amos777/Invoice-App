@@ -1,5 +1,4 @@
-// Invoicr Pro Service Worker for PWA Offline and Installability
-const CACHE_NAME = 'invoicr-pro-v2';
+const CACHE_NAME = 'invoicr-pro-v3';
 const STATIC_ASSETS = [
   '/',
   '/index.html',

@@ -1,0 +1,24 @@
+[phases.setup]
+nixPkgs = [
+  "...",
+  "chromium",
+  "nss",
+  "nspr",
+  "atk",
+  "at-spi2-atk",
+  "cups",
+  "dbus",
+  "libdrm",
+  "expat",
+  "libxkbcommon",
+  "pango",
+  "cairo",
+  "alsa-lib",
+  "mesa",
+  "fontconfig",
+  "freetype"
+]
+
+[variables]
+CHROMIUM_PATH = "chromium"
+PUPPETEER_EXECUTABLE_PATH = "chromium"
